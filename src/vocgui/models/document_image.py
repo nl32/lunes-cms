@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 from PIL import Image, ImageFilter
 from django.utils.html import mark_safe
@@ -22,6 +24,25 @@ class DocumentImage(models.Model):
         Document, on_delete=models.CASCADE, related_name="document_image"
     )
     confirmed = models.BooleanField(default=True, verbose_name="confirmed")
+
+    @staticmethod
+    def __save_image(img, file_path=None, img_format=None):
+        """Helper function that saves an image. Eventually, 
+        the image gets converted to `JPEG` first.
+
+        :param img: Image that needs to be saved
+        :type img: PIL.Image
+        """
+        if file_path is None:
+            file_path = img.filename
+        if img_format is None:
+            img.save(file_path)
+        elif img.format == img_format:
+            img.save(file_path, img_format)
+        else:
+            new_file_path, _ = os.path.splitext(file_path)
+            new_file_path += f".{img_format}"
+            img.save(new_file_path, img_format)
 
     def image_tag(self):
         """Image thumbnail to display a preview of a image in the editing section
@@ -55,7 +76,7 @@ class DocumentImage(models.Model):
                 new_path = elem + "_"
         new_path = new_path + "original." + name_elements[-1]
         img = Image.open(self.image.path)
-        img.save(new_path)
+        DocumentImage.__save_image(img, new_path)
 
     def crop_img(self):
         """
@@ -103,7 +124,7 @@ class DocumentImage(models.Model):
             ((img_blurr.height - img_cropped.height) // 2),
         )
         img_blurr.paste(img_cropped, offset)
-        img_blurr.save(self.image.path)
+        DocumentImage.__save_image(img_blurr, self.image.path)
 
     def __str__(self):
         """String representation of DocumentImage instance

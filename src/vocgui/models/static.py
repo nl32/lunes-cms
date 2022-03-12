@@ -30,6 +30,8 @@ class Static:
     blurr_radius = 30
     # maximum (width, height) of images
     img_size = (1024, 768)
+    # image format
+    img_format = "JPEG"
 
     # super admin group name
     admin_group = "Lunes"
